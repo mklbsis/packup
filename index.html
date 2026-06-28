@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PackUp">
+<meta name="theme-color" content="#7c3aed">
+<title>PackUp — Prépare ta valise</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧳</text></svg>">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,system-ui,sans-serif;background:#faf5ff;color:#1a1f36;min-height:100dvh}
+#root{max-width:480px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column}
+.hd{background:#7c3aed;color:#fff;padding:20px 20px 16px;border-radius:0 0 20px 20px}
+.hd h1{font-size:22px;font-weight:700}
+.hd-s{font-size:13px;color:rgba(255,255,255,.6);margin-top:4px}
+.ct{flex:1;padding:16px 16px 80px}
+.cd{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);border:1px solid #e5e5e0}
+.fi{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #e5e5e0;background:#f5f5f2;font-size:16px;font-family:inherit;outline:none}
+.fi:focus{border-color:#7c3aed}
+.lb{font-size:13px;font-weight:600;color:#6b7280;display:block;margin-bottom:6px}
+.btn{width:100%;padding:14px;border-radius:12px;border:none;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit;background:#7c3aed;color:#fff}
+.btn:disabled{opacity:.4}
+.btn-o{background:transparent;color:#7c3aed;border:2px solid #7c3aed}
+.btn-s{width:auto;padding:10px 16px;font-size:14px}
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.type-btn{padding:20px 12px;border-radius:14px;border:2px solid #e5e5e0;background:#fff;cursor:pointer;text-align:center}
+.type-btn.on{border-color:#7c3aed;background:#f5f3ff}
+.type-btn .icon{font-size:32px;margin-bottom:6px}
+.type-btn .name{font-size:14px;font-weight:600}
+.dur-row{display:flex;gap:8px;margin-bottom:16px}
+.dur-btn{flex:1;padding:12px;border-radius:12px;border:2px solid #e5e5e0;background:#fff;cursor:pointer;text-align:center;font-size:14px;font-weight:500}
+.dur-btn.on{border-color:#7c3aed;background:#f5f3ff;font-weight:700;color:#7c3aed}
+.cat-h{font-size:13px;font-weight:700;color:#7c3aed;padding:12px 0 6px;text-transform:uppercase;letter-spacing:.5px;display:flex;justify-content:space-between}
+.item{padding:8px 0;border-bottom:1px solid #f0f0ed;display:flex;align-items:center;gap:8px}
+.item.done{opacity:.4}
+.item.done .item-n{text-decoration:line-through}
+.item-n{flex:1;font-size:14px}
+.cb{width:20px;height:20px;accent-color:#7c3aed;flex-shrink:0}
+.ib{background:none;border:none;cursor:pointer;padding:4px;font-size:16px;color:#6b7280}
+.prog{display:flex;justify-content:space-around;margin-bottom:4px}
+.prog-i{text-align:center}
+.prog-v{font-size:22px;font-weight:700}
+.prog-l{font-size:11px;color:rgba(255,255,255,.6);margin-top:2px}
+.bar-bg{height:8px;background:rgba(255,255,255,.2);border-radius:4px;overflow:hidden;margin-top:10px}
+.bar-fg{height:100%;border-radius:4px;background:#c4b5fd;transition:width .3s}
+.reset{background:rgba(255,255,255,.12);border:none;border-radius:8px;padding:8px;cursor:pointer;color:rgba(255,255,255,.7)}
+.add-row{display:flex;gap:8px;margin-top:8px}
+.ptabs{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px}
+.ptab{padding:8px 16px;border-radius:20px;border:none;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;background:#e5e5e0;color:#6b7280}
+.ptab.on{background:#7c3aed;color:#fff;font-weight:700}
+.ptab.shared{background:#f59e0b;color:#fff;font-weight:700}
+.qty-ctrl{display:flex;align-items:center;gap:2px}
+.qty-btn{width:26px;height:26px;border-radius:13px;border:1.5px solid #e5e5e0;background:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#7c3aed;font-weight:700}
+.qty-val{font-size:14px;font-weight:600;min-width:20px;text-align:center}
+.person-row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+.chip{padding:6px 12px;border-radius:16px;border:1.5px solid #e5e5e0;background:#fff;font-size:13px;cursor:pointer;display:inline-block}
+.chip.on{border-color:#7c3aed;background:#f5f3ff;color:#7c3aed;font-weight:600}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const K='packup-data';
+const uid=()=>Math.random().toString(36).slice(2,8);
+
+const TYPES=[
+{id:'plage',icon:'🏖️',name:'Plage'},{id:'montagne',icon:'⛰️',name:'Montagne'},
+{id:'city',icon:'🏙️',name:'City trip'},{id:'pro',icon:'💼',name:'Voyage pro'},
+{id:'camping',icon:'⛺',name:'Camping'},{id:'ski',icon:'⛷️',name:'Ski'},
+{id:'road',icon:'🚗',name:'Road trip'},{id:'famille',icon:'👨‍👩‍👧‍👦',name:'En famille'},
+];
+const DURS=[
+{id:'we',name:'Week-end',label:'2-3 jours'},{id:'semaine',name:'1 semaine',label:'5-7 jours'},{id:'long',name:'2+ semaines',label:'10+ jours'},
+];
+
+const BASE={
+'Vêtements':[
+{n:'T-shirts / Hauts',q:[3,5,8],s:false},{n:'Pantalons / Shorts',q:[2,3,5],s:false},
+{n:'Sous-vêtements',q:[3,7,12],s:false},{n:'Chaussettes (paires)',q:[3,7,12],s:false},
+{n:'Pyjama',q:[1,2,2],s:false},{n:'Pull / Gilet',q:[1,2,3],s:false},
+],
+'Toilette':[
+{n:'Brosse à dents',q:[1,1,1],s:false},{n:'Dentifrice',q:[1,1,1],s:true},
+{n:'Shampoing',q:[1,1,1],s:true},{n:'Déodorant',q:[1,1,1],s:false},
+{n:'Crème solaire',q:[1,1,1],s:true,t:['plage','montagne','camping','road']},
+],
+'Tech & Documents':[
+{n:'Chargeur téléphone',q:[1,1,1],s:false},{n:'Passeport / CI',q:[1,1,1],s:false},
+{n:'Carte bancaire',q:[1,1,1],s:false},{n:'Écouteurs',q:[1,1,1],s:false},
+],
+'Santé':[
+{n:'Médicaments perso',q:[1,1,1],s:false},{n:'Trousse à pharmacie',q:[1,1,1],s:true},
+],
+};
+
+const EXTRAS={
+plage:{'Plage':[{n:'Maillot de bain',s:0},{n:'Serviette de plage',s:0},{n:'Tongs',s:0},{n:'Lunettes de soleil',s:0},{n:'Chapeau / Casquette',s:0},{n:'Après-soleil',s:1}]},
+montagne:{'Randonnée':[{n:'Chaussures de rando',s:0},{n:'Gourde',s:0},{n:'Sac à dos',s:0},{n:'Veste imperméable',s:0},{n:'Bâtons de marche',s:0},{n:'Lampe frontale',s:1}]},
+city:{'Ville':[{n:'Chaussures confortables',s:0},{n:'Sac à dos léger',s:0},{n:'Parapluie',s:1},{n:'Guide / Cartes',s:1},{n:'Adaptateur prise',s:1}]},
+pro:{'Pro':[{n:'Costume / Tailleur',s:0},{n:'Chemises',s:0},{n:'Chaussures de ville',s:0},{n:'PC portable',s:0},{n:'Chargeur PC',s:0},{n:'Cartes de visite',s:0}]},
+camping:{'Camping':[{n:'Tente',s:1},{n:'Sac de couchage',s:0},{n:'Matelas gonflable',s:0},{n:'Lampe frontale',s:0},{n:'Couteau suisse',s:1},{n:'Briquet',s:1},{n:'Gourde',s:0},{n:'Anti-moustiques',s:1},{n:'Popote / Couverts',s:1}]},
+ski:{'Ski':[{n:'Combinaison ski',s:0},{n:'Gants de ski',s:0},{n:'Bonnet',s:0},{n:'Masque de ski',s:0},{n:'Crème solaire 50',s:1},{n:'Cache-cou',s:0},{n:'Chaussettes thermiques',s:0}]},
+road:{'Road trip':[{n:'GPS / Support tél.',s:1},{n:'Câble auxiliaire',s:1},{n:'Snacks',s:1},{n:'Couverture',s:1},{n:'Trousse de secours',s:1},{n:'Sacs poubelle',s:1}]},
+famille:{'Enfants':[{n:'Doudou',s:0},{n:'Livres / Jeux',s:1},{n:'Goûters',s:1},{n:'Couches (si bébé)',s:0},{n:'Poussette',s:1},{n:'Carnet de santé',s:0}]},
+};
+
+let ST={data:null,selType:null,selDur:null,people:[''],activePerson:'__shared__'};
+
+function load(){try{const d=localStorage.getItem(K);return d?JSON.parse(d):null;}catch{return null;}}
+function save(){try{localStorage.setItem(K,JSON.stringify(ST.data));}catch{}}
+
+function h(t,a,...c){const e=document.createElement(t);if(a)Object.entries(a).forEach(([k,v])=>{if(k.startsWith('on'))e[k]=v;else if(k==='html')e.innerHTML=v;else if(k==='disabled'){if(v)e.setAttribute('disabled','');}else if(k==='checked'){e.checked=!!v;}else e.setAttribute(k,v);});c.flat(9).forEach(x=>{if(x!=null)e.append(typeof x==='string'?document.createTextNode(x):x);});return e;}
+
+function genItems(type,durId,person,shared){
+const di=DURS.findIndex(d=>d.id===durId);
+const items=[];
+Object.entries(BASE).forEach(([cat,list])=>{
+list.forEach(it=>{
+if(it.t&&!it.t.includes(type))return;
+if(shared&&!it.s)return;
+if(!shared&&it.s)return;
+items.push({id:uid(),name:it.n,qty:it.q[di],cat,checked:false,person});
+});
+});
+const ex=EXTRAS[type]||{};
+Object.entries(ex).forEach(([cat,list])=>{
+list.forEach(it=>{
+if(shared&&!it.s)return;
+if(!shared&&it.s)return;
+items.push({id:uid(),name:it.n,qty:1,cat,checked:false,person});
+});
+});
+return items;
+}
+
+function renderSetup(){
+const root=document.getElementById('root');root.innerHTML='';
+const ppl=ST.people.filter(p=>p.trim());
+const valid=ST.selType&&ST.selDur&&ppl.length>=1;
+
+root.append(
+h('div',{class:'hd'},h('h1',null,'PackUp'),h('p',{class:'hd-s'},'Prépare ta valise intelligemment')),
+h('div',{class:'ct',style:'padding-top:24px'},
+h('h2',{style:'font-size:20px;font-weight:700;margin-bottom:4px'},'Nouveau voyage'),
+h('p',{style:'color:#6b7280;font-size:14px;margin-bottom:20px'},'On prépare ta liste en quelques clics'),
+
+h('div',{class:'cd'},
+h('label',{class:'lb'},'Destination (optionnel)'),
+h('input',{class:'fi',id:'dest',placeholder:'Ex : Barcelone'})
+),
+
+h('div',{class:'cd'},
+h('label',{class:'lb',style:'margin-bottom:12px'},'Qui part ?'),
+...ST.people.map((p,i)=>
+h('div',{class:'person-row'},
+h('input',{class:'fi',style:'flex:1',placeholder:`Personne ${i+1}`,value:p,oninput:e=>{ST.people[i]=e.target.value;}}),
+ST.people.length>1?h('button',{class:'ib',onclick:()=>{ST.people.splice(i,1);renderSetup();}},'✕'):null
+)
+),
+h('button',{class:'btn btn-o',style:'margin-top:4px;font-size:14px;padding:10px',onclick:()=>{ST.people.push('');renderSetup();}},'+ Ajouter une personne')
+),
+
+h('div',{class:'cd'},
+h('label',{class:'lb',style:'margin-bottom:12px'},'Type de voyage'),
+h('div',{class:'type-grid'},
+...TYPES.map(t=>h('div',{class:'type-btn'+(ST.selType===t.id?' on':''),onclick:()=>{ST.selType=t.id;renderSetup();}},
+h('div',{class:'icon'},t.icon),h('div',{class:'name'},t.name)
+))
+)),
+
+h('div',{class:'cd'},
+h('label',{class:'lb',style:'margin-bottom:12px'},'Durée'),
+h('div',{class:'dur-row'},
+...DURS.map(d=>h('div',{class:'dur-btn'+(ST.selDur===d.id?' on':''),onclick:()=>{ST.selDur=d.id;renderSetup();}},
+h('div',{style:'font-weight:700'},d.name),h('div',{style:'font-size:12px;color:#6b7280'},d.label)
+))
+)),
+
+h('button',{class:'btn',disabled:!valid,onclick:()=>{
+const dest=document.getElementById('dest')?.value?.trim()||'';
+const names=ST.people.filter(p=>p.trim());
+let all=[];
+all.push(...genItems(ST.selType,ST.selDur,'__shared__',true));
+names.forEach(n=>{all.push(...genItems(ST.selType,ST.selDur,n,false));});
+ST.data={items:all,type:ST.selType,dur:ST.selDur,dest,people:names,setupDone:true};
+ST.activePerson='__shared__';
+save();render();
+}},'Générer ma liste')
+));
+}
+
+function renderList(){
+const d=ST.data;
+const ap=ST.activePerson;
+const items=d.items.filter(i=>i.person===ap);
+const total=items.length;
+const checked=items.filter(i=>i.checked).length;
+const totalAll=d.items.length;
+const checkedAll=d.items.filter(i=>i.checked).length;
+const pctAll=totalAll>0?Math.round((checkedAll/totalAll)*100):0;
+
+const byCat={};
+items.forEach(i=>{if(!byCat[i.cat])byCat[i.cat]=[];byCat[i.cat].push(i);});
+
+const type=TYPES.find(t=>t.id===d.type);
+const dur=DURS.find(x=>x.id===d.dur);
+
+const root=document.getElementById('root');root.innerHTML='';
+
+root.append(h('div',{class:'hd'},
+h('div',{style:'display:flex;justify-content:space-between;align-items:flex-start'},
+h('div',null,
+h('h1',null,d.dest||'PackUp'),
+h('p',{class:'hd-s'},`${type?.icon} ${type?.name} · ${dur?.name} · ${d.people.length} pers.`)
+),
+h('button',{class:'reset',onclick:()=>{if(confirm('Nouvelle valise ?')){ST.data=null;ST.selType=null;ST.selDur=null;ST.people=[''];localStorage.removeItem(K);render();}}},'↺')
+),
+h('div',{class:'prog'},
+h('div',{class:'prog-i'},h('div',{class:'prog-v'},`${checkedAll}/${totalAll}`),h('div',{class:'prog-l'},'Total')),
+h('div',{class:'prog-i'},h('div',{class:'prog-v'},`${pctAll}%`),h('div',{class:'prog-l'},'Complété')),
+h('div',{class:'prog-i'},h('div',{class:'prog-v'},`${checked}/${total}`),h('div',{class:'prog-l'},ap==='__shared__'?'Commun':ap))
+),
+h('div',{class:'bar-bg'},h('div',{class:'bar-fg',style:`width:${pctAll}%`}))
+));
+
+const ct=h('div',{class:'ct'});
+
+ct.append(h('div',{class:'ptabs'},
+h('button',{class:'ptab'+(ap==='__shared__'?' shared':''),onclick:()=>{ST.activePerson='__shared__';render();}},'📦 Commun'),
+...d.people.map(p=>h('button',{class:'ptab'+(ap===p?' on':''),onclick:()=>{ST.activePerson=p;render();}},p))
+));
+
+Object.keys(byCat).forEach(cat=>{
+const ci=byCat[cat];
+const cc=ci.filter(i=>i.checked).length;
+const card=h('div',{class:'cd'},h('div',{class:'cat-h'},h('span',null,cat),h('span',{style:'font-size:12px;font-weight:500;color:#6b7280'},`${cc}/${ci.length}`)));
+
+[...ci].sort((a,b)=>a.checked-b.checked).forEach(item=>{
+card.append(h('div',{class:'item'+(item.checked?' done':'')},
+h('input',{type:'checkbox',class:'cb',checked:item.checked,onchange:()=>{item.checked=!item.checked;save();render();}}),
+h('span',{class:'item-n'},item.name),
+h('div',{class:'qty-ctrl'},
+h('button',{class:'qty-btn',onclick:()=>{if(item.qty>1){item.qty--;save();render();}}},'−'),
+h('span',{class:'qty-val'},String(item.qty)),
+h('button',{class:'qty-btn',onclick:()=>{item.qty++;save();render();}},'+')
+),
+h('button',{class:'ib',onclick:()=>{d.items=d.items.filter(x=>x.id!==item.id);save();render();}},'✕')
+));
+});
+ct.append(card);
+});
+
+const allCats=[...new Set(d.items.map(i=>i.cat))];
+if(!ST.addCat||!allCats.includes(ST.addCat))ST.addCat=allCats[0]||'Perso';
+ct.append(h('div',{class:'cd'},
+h('label',{class:'lb'},'Ajouter un article'),
+h('div',{class:'add-row',style:'margin-bottom:10px'},
+h('input',{class:'fi',id:'add-item',placeholder:'Ex : Adaptateur prise',style:'flex:1'}),
+h('button',{class:'btn btn-s',onclick:()=>{
+const v=document.getElementById('add-item').value.trim();
+if(!v)return;
+d.items.push({id:uid(),name:v,qty:1,cat:ST.addCat,checked:false,person:ap});
+save();render();
+}},'OK')
+),
+h('label',{class:'lb'},'Catégorie'),
+h('div',{style:'display:flex;flex-wrap:wrap;gap:6px'},
+...allCats.map(c=>h('button',{class:'chip'+(ST.addCat===c?' on':''),onclick:()=>{ST.addCat=c;render();}},c))
+)
+));
+
+ct.append(h('div',{style:'display:flex;gap:8px;margin-top:8px'},
+h('button',{class:'btn btn-o',style:'flex:1;font-size:14px;padding:10px',onclick:()=>{items.forEach(i=>i.checked=false);save();render();}},'Tout décocher'),
+h('button',{class:'btn',style:'flex:1;font-size:14px;padding:10px',onclick:()=>{items.forEach(i=>i.checked=true);save();render();}},'Tout cocher')
+));
+
+root.append(ct);
+}
+
+function render(){
+if(!ST.data)ST.data=load();
+if(!ST.data||!ST.data.setupDone)renderSetup();
+else renderList();
+}
+
+render();
+</script>
+</body>
+</html>
